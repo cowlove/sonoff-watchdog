@@ -1,0 +1,5 @@
+
+mosquitto_pub -h rp1.local -t '/circreset' -m ''
+
+
+
