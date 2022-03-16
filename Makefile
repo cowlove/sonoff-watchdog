@@ -6,7 +6,8 @@
 CHIP=esp8266
 BOARD=sonoff
 
-OTA_ADDR=192.168.4.111
+OTA_ADDR=192.168.4.167
+
 IGNORE_STATE=1
 GIT_VERSION := "$(shell git describe --abbrev=4 --dirty --always --tags)"
 BUILD_EXTRA_FLAGS += -DGIT_VERSION=\"$(GIT_VERSION)\"
@@ -32,3 +33,4 @@ curl:
 
 csim:	ota.ino ESP32sim_ubuntu.h jimlib.h 
 	g++  -x c++ -g $< -o $@ -DESP8266 -DUBUNTU -I./ 
+
