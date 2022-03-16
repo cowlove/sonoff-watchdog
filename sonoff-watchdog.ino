@@ -23,7 +23,7 @@
 
 #include "jimlib.h"
 
-//#define I2C
+#define I2C
 #ifdef I2C
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -143,7 +143,7 @@ void loop() {
 
 #if 1
   // TMP: quick hack for furnace, just power cycle every 15 minutes, don't do anything else 
-  if (0 && secondTick) {
+  if (1 && secondTick) {
     static int secs = 0;
     secs = (secs + 1) % (15 * 60);
     if (secs > 60 && secs < 70) {
@@ -160,10 +160,20 @@ void loop() {
     display.printf(" %03d ", secs);
     display.display();
 #endif
+
+		udp.beginPacket("255.255.255.255", 9000);
+		char b[128];
+		snprintf(b, sizeof(b), "%d %s " __FILE__ " " GIT_VERSION  " 0x%08x ping:%03d\n", (int)(millis() / 1000), WiFi.localIP().toString().c_str(), 
+			ESP.getChipId(), secondsSincePing);
+  	udp.write((const uint8_t *)b, strlen(b));
+		udp.endPacket();
+    Serial.print(b);
+
+
   }
-  if (secondTick && butFilt.inProgress() == false)  {
+  if (0 && secondTick && butFilt.inProgress() == false)  {
     digitalWrite(relayPin, 1);
-    digitalWrite(ledPin, 0);        
+    //digitalWrite(ledPin, 0);        
 		udp.beginPacket("255.255.255.255", 9000);
 		char b[128];
 		snprintf(b, sizeof(b), "%d %s " __FILE__ " " GIT_VERSION  " 0x%08x ping:%03d\n", (int)(millis() / 1000), WiFi.localIP().toString().c_str(), 
