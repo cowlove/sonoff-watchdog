@@ -5,12 +5,15 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <WiFiManager.h>
+//#include <WiFiManager.h>
 #include <NTPClient.h>
 //#include "SPIFFS.h"
 #include <Wire.h>
 #include <SPI.h>
 #include <Pinger.h>
+
+#include <ESP8266WiFi.h>
+#include <PubSubClient.h>
 
 #include "OneWireNg_CurrentPlatform.h"
 #include "RTClib.h"
@@ -47,7 +50,8 @@ void snow();
 
 RTC_DS3231 rtc;
 OneWireNg_CurrentPlatform ow(14, false);
-
+WiFiClient espClient;
+PubSubClient client(espClient);
 
 const int ledPin = 13;
 const int relayPin = 12;
@@ -57,13 +61,54 @@ DigitalButton button(buttonPin);
 LongShortFilter butFilt(1000,500);
 
 WiFiUDP udp;
-WiFiManager wman;
+//WiFiManager wman;
 NTPClient ntp(udp);
 int i2cDeviceCount = 0;
 
 Pinger ping; 
 int secondsSincePing = 0;
 void testScreen(); 
+int mqtt_msgs = 0;
+
+static int secs = 0;
+
+void callback(char* topic, byte* payload, unsigned int length) {
+  Serial.print("Message arrived [");
+  Serial.print(topic);
+  Serial.print("] ");
+  for (int i = 0; i < length; i++) {
+    Serial.print((char)payload[i]);
+  }
+  Serial.println();
+  mqtt_msgs++;
+  secs = 60;
+}
+
+void reconnect() {
+  // Loop until we're reconnected
+  if (!client.connected()) {
+    Serial.print("Attempting MQTT connection...");
+    // Create a random client ID
+    String clientId = "ESP8266Client-";
+    clientId += String(random(0xffff), HEX);
+    // Attempt to connect
+    if (client.connect(clientId.c_str())) {
+      Serial.println("connected");
+      // Once connected, publish an announcement...
+      String msg = "hello msgs received " + String(mqtt_msgs, DEC);
+      client.publish("outTopic", msg.c_str());
+      // ... and resubscribe
+      client.subscribe("/circreset");
+      client.setCallback(callback);
+    } else {
+      Serial.print("failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" try again in 5 seconds");
+      // Wait 5 seconds before retrying
+      //delay(5000);
+    }
+  }
+}
 
 void setup() {
 	pinMode(ledPin, OUTPUT);
@@ -125,6 +170,8 @@ void setup() {
     }
   });
 
+  client.setServer("192.168.4.1", 1883);
+  client.setCallback(callback);
 }
 
 EggTimer sec(1000), slowBlink(20000), minute(60000);
@@ -138,18 +185,22 @@ int seconds = 0;
 void loop() {
 	ArduinoOTA.begin();
 	ArduinoOTA.handle();
+  reconnect();
+  client.loop();
 
 	bool secondTick = sec.tick();
 
 #if 1
   // TMP: quick hack for furnace, just power cycle every 15 minutes, don't do anything else 
-  if (1 && secondTick) {
-    static int secs = 0;
-    secs = (secs + 1) % (15 * 60);
-    if (secs > 60 && secs < 70) {
+  if (0 && secondTick) {
+    client.publish("circmsgs", String(mqtt_msgs, DEC).c_str());
+    secs = (secs + 1) % (45 * 60);
+    if (0 && (secs > 60 && secs < 70)) {
+      client.publish("circpower", "0", true);
       digitalWrite(relayPin, 0);
       digitalWrite(ledPin, 1);
     } else { 
+      client.publish("circpower", "1", true);
       digitalWrite(relayPin, 1);
       digitalWrite(ledPin, 0);
     }
@@ -171,7 +222,7 @@ void loop() {
 
 
   }
-  if (0 && secondTick && butFilt.inProgress() == false)  {
+  if (1 && secondTick && butFilt.inProgress() == false)  {
     digitalWrite(relayPin, 1);
     //digitalWrite(ledPin, 0);        
 		udp.beginPacket("255.255.255.255", 9000);
