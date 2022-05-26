@@ -1,7 +1,7 @@
 #BOARD=esp32doit-devkit-v1
 #BOARD=heltec_wifi_kit_32
 #BOARD=nodemcu-32s
-#VERBOSE=1
+VERBOSE=1
 
 CHIP=esp8266
 BOARD=sonoff
@@ -31,6 +31,6 @@ curl:
 	curl -v -F "image=@${BUILD_DIR}/${MAIN_NAME}.bin" ${OTA_ADDR}/update
 
 
-csim:	ota.ino ESP32sim_ubuntu.h jimlib.h 
-	g++  -x c++ -g $< -o $@ -DESP8266 -DUBUNTU -I./ 
+csim:	sonoff-watchdog.ino  
+	g++  -x c++ -g $< -o $@ -DESP8266 -DUBUNTU -I./ -I${HOME}/Arduino/libraries/jimlib/src 
 

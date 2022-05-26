@@ -24,7 +24,7 @@
 
 #include "jimlib.h"
 
-#define I2C
+//#define I2C
 #ifdef I2C
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
@@ -111,8 +111,8 @@ void setup() {
     if (response.ReceivedResponse) {
       secondsSincePing = 0;
       digitalWrite(ledPin, 0); //light back on  
-      return true;
     }
+    return true;
   });
 }
 
