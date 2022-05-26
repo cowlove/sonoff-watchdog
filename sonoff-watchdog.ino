@@ -72,45 +72,10 @@ int mqtt_msgs = 0;
 
 static int secs = 0;
 
-void callback(char* topic, byte* payload, unsigned int length) {
-  Serial.print("Message arrived [");
-  Serial.print(topic);
-  Serial.print("] ");
-  for (int i = 0; i < length; i++) {
-    Serial.print((char)payload[i]);
-  }
-  Serial.println();
-  mqtt_msgs++;
-  secs = 60;
-}
-
-void reconnect() {
-  // Loop until we're reconnected
-  if (!client.connected()) {
-    Serial.print("Attempting MQTT connection...");
-    // Create a random client ID
-    String clientId = "ESP8266Client-";
-    clientId += String(random(0xffff), HEX);
-    // Attempt to connect
-    if (client.connect(clientId.c_str())) {
-      Serial.println("connected");
-      // Once connected, publish an announcement...
-      String msg = "hello msgs received " + String(mqtt_msgs, DEC);
-      client.publish("outTopic", msg.c_str());
-      // ... and resubscribe
-      client.subscribe("/circreset");
-      client.setCallback(callback);
-    } else {
-      Serial.print("failed, rc=");
-      Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      //delay(5000);
-    }
-  }
-}
+JStuff j;
 
 void setup() {
+  j.begin();
 	pinMode(ledPin, OUTPUT);
 	digitalWrite(ledPin, 0);
 
@@ -124,23 +89,6 @@ void setup() {
   digitalWrite(relayPin, 1);
   digitalWrite(ledPin, 0);
 
-	WiFi.disconnect(true);
-	WiFi.mode(WIFI_STA);
-	WiFi.begin("ChloeNet", "niftyprairie7");
-	
-	//wman.autoConnect();  // never has been reliable don't be tricked 
-
-	while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-		Serial.println("Connection Failed! Rebooting...");
-		delay(5000);
-    digitalWrite(ledPin, 1);
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin("ChloeNet", "niftyprairie7");
-    //ESP.restart();
-	}
-
-	ArduinoOTA.begin();
 	//ntp.begin();
 	//ntp.setUpdateInterval(10 /*minutes*/* 60 * 1000); 
 	//ntp.update();
@@ -169,9 +117,6 @@ void setup() {
       return true;
     }
   });
-
-  client.setServer("192.168.4.1", 1883);
-  client.setCallback(callback);
 }
 
 EggTimer sec(1000), slowBlink(20000), minute(60000);
@@ -183,11 +128,7 @@ std::string disp = "";
 int seconds = 0;
 
 void loop() {
-	ArduinoOTA.begin();
-	ArduinoOTA.handle();
-  reconnect();
-  client.loop();
-
+  j.run();
 	bool secondTick = sec.tick();
 
 #if 1
@@ -245,10 +186,6 @@ void loop() {
       digitalWrite(ledPin, 1);        
     }
 	}
-
-
-
-
   return;
 #endif 
 
