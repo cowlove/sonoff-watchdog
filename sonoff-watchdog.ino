@@ -5,9 +5,7 @@
 #include <DNSServer.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-//#include <WiFiManager.h>
 #include <NTPClient.h>
-//#include "SPIFFS.h"
 #include <Wire.h>
 #include <SPI.h>
 #include <Pinger.h>
@@ -74,13 +72,12 @@ static int secs = 0;
 
 JStuff j;
 
+CLI_VARIABLE_INT(cliVar, 25);
+
 void setup() {
   j.begin();
 	pinMode(ledPin, OUTPUT);
 	digitalWrite(ledPin, 0);
-
-	Serial.begin(115200);
-	Serial.println("Booting");
 
 	pinMode(relayPin, OUTPUT);
 	pinMode(buttonPin, INPUT);

@@ -6,7 +6,7 @@
 CHIP=esp8266
 BOARD=sonoff
 
-OTA_ADDR=192.168.4.167
+OTA_ADDR=192.168.4.109
 
 IGNORE_STATE=1
 GIT_VERSION := "$(shell git describe --abbrev=4 --dirty --always --tags)"
@@ -16,7 +16,7 @@ EXCLUDE_DIRS=esp32-micro-sdcard
 include ${HOME}/Arduino/libraries/makeEspArduino/makeEspArduino.mk
 
 fixtty:
-	stty -F ${UPLOAD_PORT} -hupcl -crtscts -echo raw 115200 
+	stty -F ${UPLOAD_PORT} -hupcl -crtscts -echo raw 921600
 
 cat:	fixtty
 	cat ${UPLOAD_PORT}
