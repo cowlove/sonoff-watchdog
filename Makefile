@@ -23,6 +23,9 @@ cat:	fixtty
 
 socat:	
 	socat udp-recv:9000 - 
+
+mocat:        
+	mosquitto_sub -h 192.168.5.1 -t "${MAIN_NAME}/#" -F "%I %t %p"   | tee -a mocat.txt
 	
 backtrace:
 	tr ' ' '\n' | /home/jim/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/1.22.0-80-g6c4433a-5.2.0/bin/xtensa-esp32-elf-addr2line -f -i -e $(BUILD_DIR)/$(MAIN_NAME).elf

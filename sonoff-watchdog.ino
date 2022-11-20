@@ -47,7 +47,7 @@ void snow();
 #endif // I2C
 
 RTC_DS3231 rtc;
-OneWireNg_CurrentPlatform ow(14, false);
+OneWireNg_CurrentPlatform ow(14, true);
 WiFiClient espClient;
 PubSubClient client(espClient);
 
@@ -73,6 +73,7 @@ static int secs = 0;
 JStuff j;
 
 CLI_VARIABLE_INT(cliVar, 25);
+TempSensor tempSense(&ow);
 
 void setup() {
   j.begin();
@@ -89,6 +90,9 @@ void setup() {
 	//ntp.begin();
 	//ntp.setUpdateInterval(10 /*minutes*/* 60 * 1000); 
 	//ntp.update();
+
+
+
 
 #ifdef I2C
 	Wire.begin(3, 1);
@@ -161,12 +165,13 @@ void loop() {
 
   }
   if (1 && secondTick && butFilt.inProgress() == false)  {
+    float temp = tempSense.readTemp();
     digitalWrite(relayPin, 1);
     //digitalWrite(ledPin, 0);        
 		udp.beginPacket("255.255.255.255", 9000);
 		char b[128];
-		snprintf(b, sizeof(b), "%d %s " __FILE__ " " GIT_VERSION  " 0x%08x ping:%03d\n", (int)(millis() / 1000), WiFi.localIP().toString().c_str(), 
-			ESP.getChipId(), secondsSincePing);
+		snprintf(b, sizeof(b), "%d %s " __FILE__ " " GIT_VERSION  " 0x%08x ping:%03d %.2f\n", (int)(millis() / 1000), WiFi.localIP().toString().c_str(), 
+			ESP.getChipId(), secondsSincePing, temp);
   	udp.write((const uint8_t *)b, strlen(b));
 		udp.endPacket();
     Serial.print(b);
@@ -182,6 +187,7 @@ void loop() {
       digitalWrite(relayPin, 0);
       digitalWrite(ledPin, 1);        
     }
+    OUT("temp %.2f", temp);
 	}
   return;
 #endif 
